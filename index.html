@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #f2f2f7; --text-light: #000000; --card-light: #ffffff; --border-light: #e5e5ea;
+            --header-light: rgba(249, 249, 249, 0.85); --text-secondary-light: #3c3c4399;
+            
+            --bg-dark: #000000; --text-dark: #ffffff; --card-dark: #1c1c1e; --border-dark: #38383a;
+            --header-dark: rgba(28, 28, 30, 0.85); --text-secondary-dark: #ebebf599;
+
+            --accent-blue: #0a84ff; --accent-green: #30d158; --accent-red: #ff453a; --accent-yellow: #ffd60a;
+        }
+        
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light); color: var(--text-light);
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overscroll-behavior-y: none;
+            -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+        }
+        .dark body { background-color: var(--bg-dark); color: var(--text-dark); }
+
+        .ios-header { background-color: var(--header-light); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-light); transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .dark .ios-header { background-color: var(--header-dark); border-bottom-color: var(--border-dark); }
+
+        .ios-card { background-color: var(--card-light); transition: background-color 0.3s ease; }
+        .dark .ios-card { background-color: var(--card-dark); }
+        
+        .ios-panel { background-color: var(--card-light); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease; touch-action: none; }
+        .dark .ios-panel { background-color: var(--card-dark); }
+        .ios-panel.active { transform: translateY(0); }
+        
+        .gradient-text { background: linear-gradient(90deg, #0a84ff, #5e5ce6, #bf5af2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: gradient-animation 6s ease infinite; background-size: 200% 200%; }
+        @keyframes gradient-animation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .blinking-row { animation: blink-animation 1.8s ease-in-out infinite; }
+        @keyframes blink-animation { 0%, 100% { background-color: transparent; } 50% { background-color: #0a84ff33; } }
+        .dark .blinking-row { animation: blink-animation-dark 1.8s ease-in-out infinite; }
+        @keyframes blink-animation-dark { 0%, 100% { background-color: transparent; } 50% { background-color: #0a84ff4d; } }
+
+        .content-transition { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .text-secondary { color: var(--text-secondary-light); }
+        .dark .text-secondary { color: var(--text-secondary-dark); }
+
+        #theme-toggle-icon { transition: transform 0.5s ease-in-out; }
+        #theme-toggle-icon .sun-beams { transform-origin: center; transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out; }
+        #theme-toggle-icon .moon { transform-origin: center; transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out; transform: scale(0.6); opacity: 0; }
+        .dark #theme-toggle-icon { transform: rotate(45deg); }
+        .dark #theme-toggle-icon .sun-beams { transform: scale(0.6); opacity: 0; }
+        .dark #theme-toggle-icon .moon { transform: scale(1); opacity: 1; }
+        
+        #donation-message { transition: opacity 0.4s ease-in-out; }
+        #donation-button {
+            background: linear-gradient(45deg, #ff453a, #ff9f0a, #ffd60a, #30d158, #0a84ff, #bf5af2, #ff453a);
+            background-size: 400% 400%;
+            animation: gradient-flow 8s ease infinite;
+        }
+
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .ad-container { position: absolute; height: 1px; width: 1px; top: -10px; left: -10px; visibility: hidden; pointer-events: none; z-index: -1; }
+    </style>
+
+
+
+
+</head>
+<body class="antialiased">
+
+    <div id="splash-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black transition-opacity duration-500 p-8">
+        <div class="flex-grow flex items-center justify-center">
+             <div id="lottie-animation" class="w-40 h-40"></div>
+        </div>
+        <div class="flex-shrink-0">
+             <h1 class="text-2xl font-bold gradient-text">Powered By Ali</h1>
+        </div>
+    </div>
+
+    <div id="adblock-warning" class="hidden fixed inset-0 z-[120] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-red-600 text-white p-8 rounded-2xl shadow-lg max-w-sm text-center">
+            <h2 class="text-2xl font-bold mb-2">Ad Blocker Detected</h2>
+            <p class="text-red-100">Please disable your ad blocker and refresh the page to continue using Quizeyi.</p>
+        </div>
+    </div>
+    
+    <div id="app" class="hidden opacity-0 transition-opacity duration-300">
+        <header id="main-header" class="ios-header sticky top-0 z-30 w-full"><div class="max-w-5xl mx-auto px-4"><div class="flex items-center justify-between h-16"><div class="flex items-center min-w-0"><button id="back-button" class="hidden -ml-2 p-2 text-[color:var(--accent-blue)] flex items-center gap-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg><span id="back-button-text" class="text-lg font-medium">Back</span></button><h1 id="header-title" class="text-3xl font-bold truncate">Dashboard</h1></div><button id="settings-button" class="p-2 rounded-full text-[color:var(--accent-blue)] relative"><span id="notification-badge" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-[color:var(--accent-red)] rounded-full border-2 border-[color:var(--card-light)] dark:border-[color:var(--card-dark)]"></span><svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></button></div></div></header>
+        
+        <div class="flex justify-center py-2">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : 'ade27afee177c088e865bebbc4dca698',
+                    'format' : 'iframe',
+                    'height' : 50,
+                    'width' : 320,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/ade27afee177c088e865bebbc4dca698/invoke.js"></script>
+        </div>
+
+        <main id="main-content" class="max-w-5xl mx-auto p-4"></main>
+        
+        <div id="donation-container" class="fixed bottom-5 right-5 z-40 cursor-grab active:cursor-grabbing flex items-center gap-3">
+            <div id="donation-message" class="px-3 py-1.5 text-sm bg-gray-900/80 dark:bg-gray-200/80 text-white dark:text-black rounded-lg shadow-lg backdrop-blur-sm whitespace-nowrap pointer-events-none"></div>
+            <a id="donation-link" href="upi://pay?pa=ali.192@superyes&pn=Donation for Quizeyi">
+                <div id="donation-button" class="p-3 rounded-full shadow-lg text-white transform hover:scale-110 transition-transform"><svg class="w-8 h-8 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg></div>
+            </a>
+        </div>
+    </div>
+    
+    <div id="panel-overlay" class="fixed inset-0 bg-black/40 z-40 opacity-0 hidden transition-opacity duration-300"></div>
+    <div id="settings-panel" class="ios-panel fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto"><div class="w-10 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6"></div><div class="space-y-4"><div class="ios-card rounded-xl"><div class="p-4 flex items-center justify-between"><span class="font-medium">Theme</span><button id="theme-toggle-btn" class="w-12 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700"><svg id="theme-toggle-icon" class="w-6 h-6 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5" class="sun-beams"></circle><path class="sun-beams" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path><path class="moon" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg></button></div></div><div class="ios-card rounded-xl"><div id="notifications-button" class="flex items-center justify-between p-4 w-full cursor-pointer"><span class="font-medium">Notifications</span><div class="flex items-center gap-2"><svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></div></div></div><div class="ios-card rounded-xl p-4"><p class="font-medium mb-3">Language</p><div class="flex space-x-2 bg-gray-200 dark:bg-gray-800 p-1 rounded-lg"><button data-lang="en" class="lang-btn flex-1 p-2 rounded-md font-semibold">English</button><button data-lang="hi" class="lang-btn flex-1 p-2 rounded-md font-semibold">हिंदी</button></div></div><div class="ios-card divide-y divide-[color:var(--border-light)] dark:divide-[color:var(--border-dark)] rounded-xl"><a href="https://t.me/Mineauge1" target="_blank" class="flex items-center justify-between p-4 w-full text-left text-[color:var(--accent-blue)]"><span class="font-medium">Contact Admin</span><svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a><a href="https://t.me/ourResulti" target="_blank" class="flex items-center justify-between p-4 w-full text-left text-[color:var(--accent-blue)]"><span class="font-medium">Result Group</span><svg class="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a></div><div class="ios-card p-1 rounded-xl"><input type="text" id="admin-code-input" class="w-full bg-transparent border-0 text-center focus:ring-0 placeholder-gray-400 dark:placeholder-gray-600" placeholder="Admin Code"></div></div></div>
+    <div id="notifications-panel" class="ios-panel fixed bottom-0 left-0 right-0 z-[60] rounded-t-2xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto"><div class="w-10 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6"></div><h2 class="text-2xl font-bold text-center mb-4">Notifications</h2><div id="notifications-list" class="space-y-3"></div></div>
+    <div id="admin-panel-container" class="hidden fixed inset-0 z-50 bg-black/30 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+    <div id="form-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 transition-opacity opacity-0"><div class="ios-card w-full max-w-lg p-6 rounded-2xl shadow-lg relative"><button id="close-modal-btn" class="absolute top-2 right-2 p-2 rounded-full text-secondary"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button><h2 id="modal-title" class="text-xl font-bold text-center mb-6">Modal Title</h2><form id="modal-form" class="space-y-4"></form></div></div>
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-4 transition-opacity opacity-0"><div class="ios-card w-full max-w-sm p-6 rounded-2xl shadow-lg text-center"><h2 id="confirm-modal-title" class="text-xl font-bold mb-2">Are you sure?</h2><p id="confirm-modal-text" class="text-secondary mb-6">This action cannot be undone.</p><div class="flex gap-3"><button id="confirm-cancel-btn" class="w-full p-3 bg-gray-200 dark:bg-gray-800 rounded-lg font-semibold transition">Cancel</button><button id="confirm-delete-btn" class="w-full p-3 bg-[color:var(--accent-red)] text-white rounded-lg font-semibold transition">Delete</button></div></div></div>
+    <div id="toast" class="fixed bottom-[-100px] left-1/2 -translate-x-1/2 bg-gray-900/80 dark:bg-gray-200/80 text-white dark:text-black px-4 py-2 rounded-lg shadow-lg transition-all duration-300 backdrop-blur-sm z-[100]"><p id="toast-message" class="font-medium"></p></div>
+    
+    <div id="terms-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="ios-card w-full max-w-md p-6 rounded-2xl shadow-lg flex flex-col max-h-[80vh]">
+            <h2 class="text-2xl font-bold text-center mb-4 flex-shrink-0">Terms and Conditions</h2>
+            <div class="text-sm text-secondary space-y-4 overflow-y-auto pr-2">
+                <p><strong>Effective Date: 30 August 2025</strong></p>
+                <p>Welcome to Quizeyi. By accessing or using this website, you agree to comply with and be bound by the following terms and conditions:</p>
+                <div>
+                    <h3 class="font-semibold text-base mb-1">1. Use of Website:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Quizeyi is designed for educational purposes to provide quizzes and track student results.</li>
+                        <li>Users must not attempt to manipulate quizzes or hack the system.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-base mb-1">2. AI-Generated Content:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>All quizzes are generated by AI for practice and learning.</li>
+                        <li>Accuracy is provided to the best of AI’s ability, but verification is recommended.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-base mb-1">3. User Account & Data:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Accounts may be required to access quizzes.</li>
+                        <li>Basic information (name, email, student ID) may be collected to track results.</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h3 class="font-semibold text-base mb-1">4. Result Sharing:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>By using Quizeyi, you consent that your quiz results may be shared in designated Telegram groups for educational purposes.</li>
+                        <li>Quizeyi is not responsible for misuse of shared results outside these groups.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-base mb-1">5. Prohibited Activities:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Copying, distributing, or modifying content without permission is prohibited.</li>
+                        <li>Users may not use Quizeyi to spam, harass, or promote unrelated content.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-base mb-1">6. Limitation of Liability:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Quizeyi is provided “as is” without warranties.</li>
+                        <li>We are not liable for any loss or damage resulting from the use of Quizeyi or shared results.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-base mb-1">7. Changes to Terms:</h3>
+                    <p>These Terms may be updated at any time. Continued use of Quizeyi constitutes acceptance of changes.</p>
+                </div>
+                <div class="border-t border-[color:var(--border-light)] dark:border-[color:var(--border-dark)] pt-4 mt-4 text-center">
+                    <p class="font-bold">Copyright ©️ – Quizeyi</p>
+                    <p class="text-xs">© 2025 Quizeyi. Power by Ali. All rights reserved.</p>
+                    <p class="text-xs mt-2">Quizeyi, its quizzes, AI-generated content, and website design are intellectual property of Ali. No part of Quizeyi may be reproduced, distributed, or transmitted without prior written permission, except for personal educational use. Results shared in Telegram groups are for educational purposes only and do not violate copyright.</p>
+                </div>
+            </div>
+            <button id="agree-btn" class="w-full p-3 mt-6 bg-[color:var(--accent-blue)] text-white rounded-lg font-semibold text-lg flex-shrink-0">Agree & Continue</button>
+        </div>
+    </div>
+    
+    <div class="ad-container adbox"></div>
+
+    <script async="async" data-cfasync="false" src="//pl27532887.revenuecpmgate.com/c8ddc4723614222938597ed5e5081a1e/invoke.js"></script>
+    <div id="container-c8ddc4723614222938597ed5e5081a1e"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, addDoc, deleteDoc, updateDoc, query, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const $ = (selector) => document.querySelector(selector);
+        const firebaseConfig = { apiKey: "AIzaSyCOdmgGQqwZ6pSgSwvA15zjE_HTk16m_3k", authDomain: "dashboard-9c2e5.firebaseapp.com", projectId: "dashboard-9c2e5", storageBucket: "dashboard-9c2e5.firebasestorage.app", messagingSenderId: "762310151203", appId: "1:762310151203:web:daf8974afa97d9457ab596" };
+        const ADMIN_EMAIL = 'mdali82350@gmail.com';
+
+        let app, auth, db;
+        let allData = [], notifications = [];
+        let state = { lang: localStorage.getItem('lang') || 'en', theme: localStorage.getItem('theme') || 'dark', isAdmin: false, page: 'subjects', subjectId: null, chapterId: null, highlightedTestId: null };
+        const translations = { en: { dashboard: "Dashboard", chapters: "Chapters", back: "Back" }, hi: { dashboard: "डैशबोर्ड", chapters: "अध्याय", back: "वापस" } };
+        
+        let unsubData, unsubNotifications;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(state.theme);
+            setupLottie();
+            
+            setTimeout(() => { 
+                $('#splash-screen').style.opacity = '0'; 
+                setTimeout(() => { 
+                    $('#splash-screen').style.display = 'none'; 
+                    checkTermsAgreement();
+                }, 500); 
+            }, 2000);
+        });
+
+        function checkTermsAgreement() {
+            if (localStorage.getItem('hasAgreedToTerms') === 'true') {
+                startApp();
+            } else {
+                $('#terms-modal').classList.remove('hidden');
+                $('#agree-btn').addEventListener('click', () => {
+                    localStorage.setItem('hasAgreedToTerms', 'true');
+                    $('#terms-modal').classList.add('hidden');
+                    startApp();
+                });
+            }
+        }
+        
+        function startApp() {
+            // Make the app visible first, then check for adblocker
+            $('#app').classList.remove('hidden');
+            setTimeout(() => $('#app').style.opacity = '1', 50);
+
+            $('#main-content').innerHTML = renderLoader();
+            initializeAppAndFirebase();
+            updateLanguageUI();
+            setupEventListeners();
+            getHighlightedTestFromURL();
+            setupDonationWidget();
+            makeDraggable($('#donation-container'));
+            setupPanelGestures($('#settings-panel'));
+            setupPanelGestures($('#notifications-panel'));
+
+            // Run adblock check after app is visible
+            setTimeout(async () => {
+                 const isBlocked = await detectAdBlocker();
+                if (isBlocked) {
+                    $('#adblock-warning').classList.remove('hidden');
+                }
+                setInterval(async () => {
+                    if(await detectAdBlocker()){
+                        $('#adblock-warning').classList.remove('hidden');
+                    }
+                }, 5000);
+            }, 1000);
+        }
+
+        function initializeAppAndFirebase() {
+            try {
+                app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app);
+                onAuthStateChanged(auth, user => { state.isAdmin = user && user.email === ADMIN_EMAIL; renderAdminPanel(); });
+                setupRealtimeListeners();
+            } catch (error) { console.error("Firebase Error:", error); showToast("Server connection failed.", 'error'); }
+        }
+        
+        function setupRealtimeListeners() {
+            if (unsubData) unsubData();
+            unsubData = onSnapshot(query(collection(db, 'subjects'), orderBy('timestamp', 'asc')), async (subjectSnapshot) => {
+                const fetchedData = await Promise.all(subjectSnapshot.docs.map(async (subjectDoc) => {
+                    const subject = { id: subjectDoc.id, ...subjectDoc.data(), chapters: [] };
+                    const chaptersCol = collection(db, 'subjects', subject.id, 'chapters');
+                    const chapterSnapshot = await getDocs(query(chaptersCol, orderBy('timestamp', 'asc')));
+                    subject.chapters = await Promise.all(chapterSnapshot.docs.map(async (chapterDoc) => {
+                        const chapter = { id: chapterDoc.id, ...chapterDoc.data(), tests: [] };
+                        const testsCol = collection(db, 'subjects', subject.id, 'chapters', chapter.id, 'tests');
+                        const testSnapshot = await getDocs(query(testsCol, orderBy('timestamp', 'asc')));
+                        chapter.tests = testSnapshot.docs.map(testDoc => ({ id: testDoc.id, ...testDoc.data() }));
+                        return chapter;
+                    }));
+                    return subject;
+                }));
+                allData = fetchedData;
+
+                if (!state.navigatedFromUrl && state.highlightedTestId) {
+                    state.navigatedFromUrl = true;
+                    let found = false;
+                    for (const subject of allData) { for (const chapter of subject.chapters) { if (chapter.tests.some(t => t.id === state.highlightedTestId)) { navigateTo('tests', { subjectId: subject.id, chapterId: chapter.id }); found = true; break; } } if (found) break; }
+                    if (!found) navigateTo('subjects');
+                } else { navigateTo(state.page, { subjectId: state.subjectId, chapterId: state.chapterId }); }
+                if(state.isAdmin) renderAdminPanel();
+            });
+
+            if (unsubNotifications) unsubNotifications();
+            unsubNotifications = onSnapshot(query(collection(db, 'notifications'), orderBy('timestamp', 'desc')), (snapshot) => {
+                notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (state.isAdmin) { const list = $('#admin-notifications-list'); if (list) list.innerHTML = renderAdminNotificationsList(); }
+                const lastSeen = localStorage.getItem('lastSeenNotification') || 0;
+                if (notifications.length > 0 && notifications[0].timestamp && notifications[0].timestamp.toMillis() > lastSeen) { $('#notification-badge').classList.remove('hidden'); }
+            });
+        }
+        
+        function applyTheme(theme) { state.theme = theme; localStorage.setItem('theme', theme); document.documentElement.classList.toggle('dark', theme === 'dark'); }
+        function updateLanguageUI() { localStorage.setItem('lang', state.lang); document.querySelectorAll('.lang-btn').forEach(btn => { const isSelected = btn.dataset.lang === state.lang; btn.classList.toggle('bg-white', isSelected && state.theme !== 'dark'); btn.classList.toggle('dark:bg-gray-900', isSelected && state.theme === 'dark'); btn.classList.toggle('text-gray-500', !isSelected); btn.classList.toggle('dark:text-gray-400', !isSelected); }); $('#back-button-text').textContent = translations[state.lang].back; }
+        function setupLottie() { lottie.loadAnimation({ container: $('#lottie-animation'), renderer: 'svg', loop: true, autoplay: true, path: 'h.json' }); }
+        
+        function navigateTo(page, context = {}) {
+            $('#main-content').innerHTML = renderLoader();
+            state.page = page; Object.assign(state, context);
+            const headerTitle = $('#header-title');
+            const backButton = $('#back-button');
+
+            if (page === 'subjects') {
+                headerTitle.classList.remove('hidden');
+                backButton.classList.add('hidden');
+                headerTitle.textContent = translations[state.lang].dashboard;
+            } else {
+                headerTitle.classList.add('hidden');
+                backButton.classList.remove('hidden');
+                const backButtonText = $('#back-button-text');
+                if (page === 'chapters') {
+                    backButtonText.textContent = translations[state.lang].dashboard;
+                } else if (page === 'tests') {
+                    const subject = allData.find(s => s.id === state.subjectId);
+                    backButtonText.textContent = subject ? subject[`name_${state.lang}`] : translations[state.lang].chapters;
+                }
+            }
+
+            setTimeout(() => { if (page === 'subjects') renderSubjects(); else if (page === 'chapters') renderChapters(state.subjectId); else if (page === 'tests') renderTests(state.subjectId, state.chapterId); }, 50);
+        }
+        
+        function renderSubjects() { let content = (allData.length === 0) ? renderEmptyState("No subjects available.") : `<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${allData.map(s => `<div class="ios-card aspect-square flex flex-col items-center justify-center p-4 rounded-2xl text-center cursor-pointer transform hover:-translate-y-1 transition-all duration-200 subject-card" data-id="${s.id}"><img src="${s.logoUrl}" alt="${s[`name_${state.lang}`]}" class="w-16 h-16 object-cover rounded-xl mb-3 shadow-md" onerror="this.src='https://placehold.co/100x100/0a84ff/ffffff?text=??'"><p class="font-semibold text-lg mt-2">${s[`name_${state.lang}`]}</p></div>`).join('')}</div>`; $('#main-content').innerHTML = `<div class="content-transition">${content}</div>`; }
+        function renderChapters(subjectId) { const subject = allData.find(s => s.id === subjectId); let content = `<h2 class="text-3xl font-bold mb-4">${subject[`name_${state.lang}`]}</h2>`; content += (!subject || subject.chapters.length === 0) ? renderEmptyState("No chapters available.") : `<div class="space-y-3">${subject.chapters.map(c => `<div class="ios-card p-4 rounded-xl flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition chapter-card" data-subject-id="${subjectId}" data-chapter-id="${c.id}"><span class="font-semibold text-lg">${c[`name_${state.lang}`]}</span><svg class="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg></div>`).join('')}</div>`; $('#main-content').innerHTML = `<div class="content-transition">${content}</div>`; }
+        function renderTests(subjectId, chapterId) { const subject = allData.find(s => s.id === subjectId); const chapter = subject?.chapters.find(c => c.id === chapterId); let content = `<h2 class="text-3xl font-bold mb-4">${chapter[`name_${state.lang}`]}</h2>`; if (!chapter || chapter.tests.length === 0) { content += renderEmptyState("No tests available."); } else { const attemptedTests = JSON.parse(localStorage.getItem('attemptedTests')) || []; content += `<div class="space-y-4">${chapter.tests.map(test => { const isAttempted = attemptedTests.includes(test.id); return `<div class="ios-card p-4 rounded-xl transition ${test.id === state.highlightedTestId ? 'blinking-row' : ''}" id="test-${test.id}"><div class="flex justify-between items-start mb-2"><h3 class="font-bold text-xl">${test.name}</h3><button class="share-btn p-2 -mt-2 -mr-2 rounded-full text-secondary" data-link="${window.location.origin}${window.location.pathname}?testId=${test.id}"><svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /></svg></button></div><div class="text-sm text-secondary flex items-center space-x-4 mb-3 font-medium"><span>${test.questions} Qs</span><span>&bull;</span><span>${test.time} Mins</span></div>${test.description ? `<p class="text-base mb-4">${test.description}</p>` : ''}<a href="${test.redirectLink}" target="_blank" class="start-test-btn w-full text-center block p-3 rounded-lg font-semibold text-lg transition text-white" data-testid="${test.id}" style="background-color: ${isAttempted ? 'var(--accent-yellow)' : 'var(--accent-blue)'};">${isAttempted ? 'Re-attempt' : 'Start Test'}</a></div>`; }).join('')}</div>`; } $('#main-content').innerHTML = `<div class="content-transition">${content}</div>`; if (state.highlightedTestId) { const el = $(`#test-${state.highlightedTestId}`); if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200); } }
+        
+        function setupEventListeners() {
+            $('#main-content').addEventListener('click', e => { const subjectCard = e.target.closest('.subject-card'); if (subjectCard) navigateTo('chapters', { subjectId: subjectCard.dataset.id }); const chapterCard = e.target.closest('.chapter-card'); if (chapterCard) navigateTo('tests', { subjectId: chapterCard.dataset.subjectId, chapterId: chapterCard.dataset.chapterId }); const shareBtn = e.target.closest('.share-btn'); if (shareBtn) copyTextToClipboard(shareBtn.dataset.link).then(() => showToast('Test link copied!')).catch(() => showToast('Failed to copy link.', 'error')); const startTestBtn = e.target.closest('.start-test-btn'); if (startTestBtn) { const testId = startTestBtn.dataset.testid; let attempted = JSON.parse(localStorage.getItem('attemptedTests')) || []; if (!attempted.includes(testId)) { attempted.push(testId); localStorage.setItem('attemptedTests', JSON.stringify(attempted)); } startTestBtn.textContent = 'Re-attempt'; startTestBtn.style.backgroundColor = 'var(--accent-yellow)'; } });
+            $('#back-button').addEventListener('click', () => { if (state.page === 'tests') navigateTo('chapters', { subjectId: state.subjectId }); else if (state.page === 'chapters') navigateTo('subjects'); });
+            $('#settings-button').addEventListener('click', () => togglePanel('settings-panel', true));
+            $('#panel-overlay').addEventListener('click', () => { ['settings-panel', 'notifications-panel', 'form-modal', 'confirm-modal', 'admin-panel-container'].forEach(id => togglePanel(id, false)); });
+            $('#theme-toggle-btn').addEventListener('click', () => applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark'));
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', e => { state.lang = e.target.dataset.lang; updateLanguageUI(); navigateTo(state.page, { subjectId: state.subjectId, chapterId: state.chapterId }); }));
+            $('#admin-code-input').addEventListener('input', e => { if (e.target.value.toUpperCase() === 'A7NOW') { togglePanel('settings-panel', false); togglePanel('admin-panel-container', true); e.target.value = ''; } });
+            $('#notifications-button').addEventListener('click', () => { renderNotificationsPanel(); togglePanel('notifications-panel', true); $('#notification-badge').classList.add('hidden'); if (notifications.length > 0 && notifications[0].timestamp) localStorage.setItem('lastSeenNotification', notifications[0].timestamp.toMillis()); });
+            $('#confirm-cancel-btn').addEventListener('click', () => togglePanel('confirm-modal', false));
+            $('#confirm-delete-btn').addEventListener('click', performDelete);
+        }
+        
+        function togglePanel(panelId, show) { const panel = $(`#${panelId}`); if (!panel) return; const overlay = $('#panel-overlay'); const modal = $(`#${panelId}`); if (show) { overlay.classList.remove('hidden'); modal.classList.remove('hidden'); setTimeout(() => { overlay.style.opacity = '1'; modal.classList.add('active', 'opacity-100'); }, 10); } else { overlay.style.opacity = '0'; modal.classList.remove('active', 'opacity-100'); setTimeout(() => { overlay.classList.add('hidden'); modal.classList.add('hidden'); }, 300); } }
+        function showToast(message, type = 'success') { const toast = $('#toast'); $('#toast-message').textContent = message; toast.classList.remove('bg-red-500'); if(type === 'error') toast.classList.add('bg-red-500'); toast.style.bottom = '5rem'; setTimeout(() => { toast.style.bottom = '-100px'; }, 3000); }
+        function getHighlightedTestFromURL() { const urlParams = new URLSearchParams(window.location.search); state.highlightedTestId = urlParams.get('testId'); }
+        function renderLoader() { return `<div class="w-full h-64 flex items-center justify-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[color:var(--accent-blue)]"></div></div>`; }
+        function copyTextToClipboard(text) { return new Promise((resolve, reject) => { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? resolve() : reject(new Error('Copy command failed')); } catch (err) { reject(err); } finally { document.body.removeChild(ta); } }); }
+        function renderEmptyState(message) { return `<div class="text-center p-10 text-secondary"><svg class="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg><p>${message}</p></div>`; }
+        function setupDonationWidget() { const messages = ["Please Donate", "Donate for Support"]; let i = 0; const msgEl = $('#donation-message'); if (!msgEl) return; msgEl.textContent = messages[i]; setInterval(() => { i = (i + 1) % messages.length; msgEl.style.opacity = '0'; setTimeout(() => { msgEl.textContent = messages[i]; msgEl.style.opacity = '1'; }, 400); }, 4000); }
+        async function detectAdBlocker() {
+            let isBlocked = false;
+            const bait = document.createElement('div');
+            bait.className = 'ad-container adbox';
+            document.body.appendChild(bait);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none') { isBlocked = true; }
+            try {
+                await Promise.all([
+                    fetch(new Request("//www.highperformanceformat.com/ade27afee177c088e865bebbc4dca698/invoke.js", { method: 'HEAD', mode: 'no-cors' })),
+                    fetch(new Request("//pl27532887.revenuecpmgate.com/c8ddc4723614222938597ed5e5081a1e/invoke.js", { method: 'HEAD', mode: 'no-cors' }))
+                ]);
+            } catch (e) {
+                isBlocked = true;
+            }
+            bait.remove();
+            return isBlocked;
+        }
+        
+        function renderNotificationsPanel() { const list = $('#notifications-list'); if (notifications.length === 0) { list.innerHTML = renderEmptyState("No notifications yet."); return; } list.innerHTML = notifications.map(n => `<div class="ios-card rounded-xl p-4"><p class="font-semibold mb-1">${n.message}</p><p class="text-sm text-secondary">${n.timestamp?.toDate().toLocaleString() || ''}</p>${n.link ? `<a href="${n.link}" target="_blank" class="text-[color:var(--accent-blue)] font-medium mt-2 inline-block">View Link</a>` : ''}</div>`).join(''); }
+        
+        function renderAdminPanel() {
+            const container = $('#admin-panel-container');
+            if (!state.isAdmin) { container.innerHTML = `<div class="w-full max-w-sm p-8 rounded-2xl shadow-lg ios-card"><h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2><form id="admin-login-form" class="space-y-4"><input type="email" id="admin-email" placeholder="Email" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-900 focus:ring-2 focus:ring-[color:var(--accent-blue)] border-0 text-lg"><input type="password" id="admin-password" placeholder="Password" required class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-900 focus:ring-2 focus:ring-[color:var(--accent-blue)] border-0 text-lg"><button type="submit" class="w-full p-3 bg-[color:var(--accent-blue)] text-white rounded-lg font-semibold text-lg">Login</button></form></div>`; container.addEventListener('submit', handleAdminLogin); } 
+            else { container.innerHTML = `<div class="h-full w-full bg-[color:var(--bg-light)] dark:bg-[color:var(--bg-dark)] overflow-y-auto"><div class="sticky top-0 z-10 ios-header p-4"><div class="max-w-4xl mx-auto flex justify-between items-center"><h2 class="text-3xl font-bold">Admin Panel</h2><div><button id="admin-close-btn" class="p-2 text-lg text-[color:var(--accent-blue)] font-medium">Done</button><button id="logout-button" class="ml-2 px-3 py-2 bg-[color:var(--accent-red)] text-white rounded-lg font-semibold">Logout</button></div></div></div><div class="max-w-4xl mx-auto p-4 space-y-6"><div class="ios-card p-4 rounded-xl"><div class="flex justify-between items-center mb-3"><h3 class="text-xl font-bold">Notifications</h3><button id="add-notification-btn" class="p-2 bg-[color:var(--accent-blue)] text-white rounded-lg font-semibold text-sm">Send New</button></div><div id="admin-notifications-list">${renderAdminNotificationsList()}</div></div><div class="ios-card p-4 rounded-xl"><div class="flex justify-between items-center mb-3"><h3 class="text-xl font-bold">Subjects</h3><button id="add-subject-btn" class="p-2 bg-[color:var(--accent-blue)] text-white rounded-lg font-semibold text-sm">Add Subject</button></div><div id="admin-subjects-list">${renderAdminSubjectsList()}</div></div></div></div>`; container.addEventListener('click', e => { if (e.target.id === 'admin-close-btn') togglePanel('admin-panel-container', false); if (e.target.id === 'logout-button') handleLogout(); if (e.target.id === 'add-subject-btn') openFormModal('subject'); if (e.target.id === 'add-notification-btn') openFormModal('notification'); handleAdminListClick(e); }); }
+        }
+        async function handleAdminLogin(e) { e.preventDefault(); if (e.target.id !== 'admin-login-form') return; if (e.target.elements['admin-email'].value !== ADMIN_EMAIL) return showToast('Invalid admin email.', 'error'); try { await signInWithEmailAndPassword(auth, e.target.elements['admin-email'].value, e.target.elements['admin-password'].value); showToast('Admin login successful!'); } catch (error) { showToast('Login failed. Check credentials.', 'error'); } }
+        function renderAdminSubjectsList() { return allData.map(s => `<div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 mb-2 border border-[color:var(--border-light)] dark:border-[color:var(--border-dark)]"><div class="flex items-center justify-between flex-wrap gap-2"><span class="font-semibold">${s['name_en']}</span><div class="flex items-center gap-2 flex-shrink-0"><button class="edit-btn text-sm p-1 text-[color:var(--accent-blue)]" data-type="subject" data-id="${s.id}">Edit</button><button class="delete-btn text-sm p-1 text-[color:var(--accent-red)]" data-type="subject" data-id="${s.id}">Delete</button><button class="add-chapter-btn text-sm px-2 py-1 bg-[color:var(--accent-green)] text-white rounded-md" data-subject-id="${s.id}">+ Chapter</button></div></div><div class="pl-4 mt-2 space-y-1">${s.chapters.map(c => `<div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg"><div class="flex items-center justify-between flex-wrap gap-2"><span>${c['name_en']}</span><div class="flex items-center gap-2 flex-shrink-0"><button class="edit-btn text-xs p-1 text-[color:var(--accent-blue)]" data-type="chapter" data-subject-id="${s.id}" data-id="${c.id}">Edit</button><button class="delete-btn text-xs p-1 text-[color:var(--accent-red)]" data-type="chapter" data-subject-id="${s.id}" data-id="${c.id}">Delete</button><button class="add-test-btn text-xs px-2 py-1 bg-[color:var(--accent-blue)] text-white rounded-md" data-subject-id="${s.id}" data-chapter-id="${c.id}">+ Test</button></div></div><div class="pl-4 mt-1 space-y-1">${c.tests.map(t => `<div class="flex items-center justify-between text-xs py-1 border-b border-gray-200 dark:border-gray-700 last:border-0"><span>${t.name}</span><div class="flex items-center gap-2 flex-shrink-0"><button class="edit-btn p-1 text-[color:var(--accent-blue)]" data-type="test" data-subject-id="${s.id}" data-chapter-id="${c.id}" data-id="${t.id}">Edit</button><button class="delete-btn p-1 text-[color:var(--accent-red)]" data-type="test" data-subject-id="${s.id}" data-chapter-id="${c.id}" data-id="${t.id}">Delete</button></div></div>`).join('')}</div></div>`).join('')}</div></div>`).join(''); }
+        function renderAdminNotificationsList() { if (notifications.length === 0) return `<p class="text-sm text-center text-secondary py-4">No notifications sent yet.</p>`; return `<div class="space-y-2">${notifications.map(n => `<div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg flex items-center justify-between text-sm"><p class="truncate pr-4">${n.message}</p><div class="flex items-center gap-2 flex-shrink-0"><button class="edit-btn text-xs p-1 text-[color:var(--accent-blue)]" data-type="notification" data-id="${n.id}">Edit</button><button class="delete-btn text-xs p-1 text-[color:var(--accent-red)]" data-type="notification" data-id="${n.id}">Delete</button></div></div>`).join('')}</div>`; }
+        function handleAdminListClick(e) { const btn = e.target.closest('button'); if (!btn) return; const { type, id, subjectId, chapterId } = btn.dataset; if(btn.classList.contains('add-chapter-btn')) openFormModal('chapter', null, { subjectId }); else if(btn.classList.contains('add-test-btn')) openFormModal('test', null, { subjectId, chapterId }); else if(btn.classList.contains('edit-btn')) openFormModal(type, id, { subjectId, chapterId }); else if(btn.classList.contains('delete-btn')) handleDelete(type, id, subjectId, chapterId); }
+        async function handleLogout() { await signOut(auth); showToast('Logged out.'); }
+        
+        function handleDelete(type, id, subjectId, chapterId) {
+            const confirmBtn = $('#confirm-delete-btn');
+            $('#confirm-modal-title').textContent = `Delete ${type}?`;
+            Object.keys(confirmBtn.dataset).forEach(key => delete confirmBtn.dataset[key]);
+            confirmBtn.dataset.type = type;
+            confirmBtn.dataset.id = id;
+            if (subjectId) confirmBtn.dataset.subjectId = subjectId;
+            if (chapterId) confirmBtn.dataset.chapterId = chapterId;
+            togglePanel('confirm-modal', true);
+        }
+
+        async function performDelete(e) {
+            const { type, id, subjectId, chapterId } = e.currentTarget.dataset;
+            let docRef;
+            if (type === 'subject') docRef = doc(db, 'subjects', id);
+            else if (type === 'chapter') docRef = doc(db, 'subjects', subjectId, 'chapters', id);
+            else if (type === 'test') docRef = doc(db, 'subjects', subjectId, 'chapters', chapterId, 'tests', id);
+            else if (type === 'notification') docRef = doc(db, 'notifications', id);
+            
+            try { if (docRef) await deleteDoc(docRef); showToast(`${type} deleted.`); } 
+            catch (error) { showToast(`Error deleting ${type}.`, 'error'); console.error(error); } 
+            finally { togglePanel('confirm-modal', false); }
+        }
+
+        function openFormModal(type, id = null, context = {}) { const form = $('#modal-form'); form.reset(); Object.assign(form.dataset, { type, id: id || '', context: JSON.stringify(context) }); let currentData = {}; if (id) { if (type === 'subject') currentData = allData.find(s => s.id === id); else if (type === 'chapter') currentData = allData.find(s => s.id === context.subjectId)?.chapters.find(c => c.id === id); else if (type === 'test') currentData = allData.find(s => s.id === context.subjectId)?.chapters.find(c => c.id === context.chapterId)?.tests.find(t => t.id === id); else if (type === 'notification') currentData = notifications.find(n => n.id === id); } const inputClass = "w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-900 focus:ring-2 focus:ring-[color:var(--accent-blue)] border-0"; let fieldsHtml = ''; if (type === 'subject') fieldsHtml = `<input name="name_en" required placeholder="English Name" class="${inputClass}" value="${currentData.name_en||''}"><input name="name_hi" required placeholder="Hindi Name" class="${inputClass}" value="${currentData.name_hi||''}"><input type="url" name="logoUrl" required placeholder="Logo URL" class="${inputClass}" value="${currentData.logoUrl||''}">`; else if (type === 'chapter') fieldsHtml = `<input name="name_en" required placeholder="English Name" class="${inputClass}" value="${currentData.name_en||''}"><input name="name_hi" required placeholder="Hindi Name" class="${inputClass}" value="${currentData.name_hi||''}">`; else if (type === 'test') fieldsHtml = `<input name="name" required placeholder="Test Name" class="${inputClass}" value="${currentData.name||''}"><input type="number" name="questions" required placeholder="Total Qs" class="${inputClass}" value="${currentData.questions||''}"><input type="number" name="time" required placeholder="Time (Mins)" class="${inputClass}" value="${currentData.time||''}"><input type="url" name="redirectLink" required placeholder="Redirect Link" class="${inputClass}" value="${currentData.redirectLink||''}"><textarea name="description" placeholder="Description (Optional)" class="${inputClass}">${currentData.description||''}</textarea>`; else if (type === 'notification') fieldsHtml = `<input name="message" required placeholder="Message" class="${inputClass}" value="${currentData.message||''}"><input type="url" name="link" placeholder="Optional Link" class="${inputClass}" value="${currentData.link||''}">`; fieldsHtml += `<button type="submit" class="w-full p-3 bg-[color:var(--accent-blue)] text-white rounded-lg font-semibold">Save</button>`; $('#modal-title').textContent = `${id ? 'Edit' : 'Add'} ${type.charAt(0).toUpperCase() + type.slice(1)}`; form.innerHTML = fieldsHtml; togglePanel('form-modal', true); $('#close-modal-btn').onclick = () => togglePanel('form-modal', false); form.onsubmit = handleFormSubmit; }
+        async function handleFormSubmit(e) { e.preventDefault(); const { type, id, context } = e.target.dataset; const data = Object.fromEntries(new FormData(e.target).entries()); const parsedContext = JSON.parse(context); let collectionRef; if (type === 'subject') collectionRef = collection(db, 'subjects'); else if (type === 'chapter') collectionRef = collection(db, 'subjects', parsedContext.subjectId, 'chapters'); else if (type === 'test') collectionRef = collection(db, 'subjects', parsedContext.subjectId, 'chapters', parsedContext.chapterId, 'tests'); else if (type === 'notification') collectionRef = collection(db, 'notifications'); if (!id) data.timestamp = serverTimestamp(); try { if (id) await updateDoc(doc(collectionRef, id), data); else await addDoc(collectionRef, data); showToast(`${type} saved.`); togglePanel('form-modal', false); } catch (error) { showToast(`Error saving ${type}.`, 'error'); console.error(error);} }
+        function makeDraggable(element) { let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0; element.onmousedown = dragMouseDown; element.ontouchstart = dragMouseDown; function dragMouseDown(e) { if (e.target.closest('#donation-link')) return; e.preventDefault(); if (e.type === "touchstart") { pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; } else { pos3 = e.clientX; pos4 = e.clientY; } document.onmouseup = closeDragElement; document.ontouchend = closeDragElement; document.onmousemove = elementDrag; document.ontouchmove = elementDrag; } function elementDrag(e) { e.preventDefault(); if (e.type === "touchmove") { pos1 = pos3 - e.touches[0].clientX; pos2 = pos4 - e.touches[0].clientY; pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; } else { pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY; } element.style.top = (element.offsetTop - pos2) + "px"; element.style.left = (element.offsetLeft - pos1) + "px"; } function closeDragElement() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; } }
+        function setupPanelGestures(panel) { let startY, currentY; panel.addEventListener('touchstart', e => { startY = e.touches[0].clientY; currentY = startY; }, { passive: true }); panel.addEventListener('touchmove', e => { if (panel.scrollTop === 0) { currentY = e.touches[0].clientY; const diff = currentY - startY; if (diff > 0) { e.preventDefault(); panel.style.transform = `translateY(${diff}px)`; } } }, { passive: false }); panel.addEventListener('touchend', e => { const diff = currentY - startY; if (diff > 100) { togglePanel(panel.id, false); } panel.style.transform = ''; }); }
+    </script>
+
+<script type="text/javascript">
+	atOptions = {
+		'key' : 'cac12d1f7e9fc0e9d86da17a222bee6c',
+		'format' : 'iframe',
+		'height' : 250,
+		'width' : 300,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/cac12d1f7e9fc0e9d86da17a222bee6c/invoke.js"></script>
+
+
+
+</body>
+</html>
+
